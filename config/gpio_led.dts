@@ -1,0 +1,19 @@
+/dts-v1/;
+/plugin/;
+
+// TODO: Come back and re-order this, reference Nerves example and add extra LED groups for each color group
+
+/ {
+    compatible = "brcm,bcm2835";
+
+    fragment@0 {
+        target = <&leds>;
+        __overlay__ {
+            gpio_led0: gpio_led0 {
+                label = "gpio-led0";
+                gpios = <&gpio 17 0>;
+                default-state = "off";
+            };
+        };
+    };
+};

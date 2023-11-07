@@ -13,11 +13,10 @@ defmodule DeluxDemo.Application do
     }
     children =
       [
-        {Delux, name: BlueIndicator, indicators: indicators}
+        {Delux, name: Delux, indicators: indicators}
       ]
 
     opts = [strategy: :one_for_one, name: DeluxDemo.Supervisor]
-
     Supervisor.start_link(children, opts)
   end
 end

@@ -40,8 +40,8 @@ dtoverlay=ramoops
 enable_uart=1
 dtoverlay=miniuart-bt
 
-# Overlay for Delux leds
-dtoverlay=gpio_led
+# Overlay for Delux leds & button
+dtoverlay=custom_gpio
 
 # Set the GPU frequency so that the MiniUART (/dev/ttyS0) can be used for
 # Bluetooth. This has a small performance impact. See

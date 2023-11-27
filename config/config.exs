@@ -20,7 +20,7 @@ config :nerves, :firmware, rootfs_overlay: "rootfs_overlay", fwup_conf: "config/
 
 config :nerves, source_date_epoch: "1698274905"
 
-config :logger, backends: [RingLogger]
+config :logger, level: :debug, backends: [RingLogger]
 
 if Mix.target() == :host do
   import_config "host.exs"

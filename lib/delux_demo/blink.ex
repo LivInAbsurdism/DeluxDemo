@@ -1,35 +1,55 @@
-# TODO: circle back to this boy once other LEDs are configuredd
-##defmodule DeluxDemo.Blink do
-#   use GenServer
+defmodule DeluxDemo.Blink do
+  use GenServer
+  require Logger
+  alias Delux, as: D
 
-#   def start_link(_args) do
-#     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
-#   end
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+  end
 
-#   def init(:ok) do
-#     {:ok, nil}
-#   end
+  def init(_args) do
+    {:ok, %{}}
+  end
 
-#   def handle_info(:blink, _state) do
-#     quick_blink_pattern = Delux.Effects.number_blink(
-#     :blue,
-#     3,
-#     blink_on_duration: 100,
-#     blink_off_duration: 100,
-#     inter_number_delay: 1000  # 1-second pause between quick and slow blinks
-#   )
+  def handle_cast({:button_press_count, count}, state) do
+    case count do
+      1 -> render_patterns(pattern_for_single_press(), :user_feedback)
+      2 -> render_patterns(pattern_for_double_press(), :user_feedback)
+      3 ->
+        render_patterns(pattern_for_triple_press(), :user_feedback)  # Higher slot
+        render_patterns(pattern_for_status(), :status)  # Lower slot
+      4 -> render_patterns(pattern_for_quad_press(), :user_feedback)
+      _ -> Logger.info("Unhandled press count: #{count}")
+    end
+    {:noreply, state}
+  end
 
-#   slow_blink_pattern = Delux.Effects.number_blink(
-#     :blue,
-#     3,
-#     blink_on_duration: 500,
-#     blink_off_duration: 500
-#   )
+  defp pattern_for_single_press() do
+    Logger.debug("single press triggered")
+    %{default: D.Effects.on(:red), rgb: D.Effects.on(:green)}
+  end
 
-#   Delux.render(quick_blink_pattern)
-#   :timer.sleep(1000 * (3 + 1))
-#   Delux.render(slow_blink_pattern)
+  defp pattern_for_double_press() do
+    Logger.debug("double press triggered")
+    %{default: D.Effects.on(:magenta), rgb: D.Effects.on(:cyan)}
+  end
 
-#   {:noreply, nil}
-#   end
-# end
+  defp pattern_for_triple_press() do
+    Logger.debug("triple press triggered")
+    %{default: D.Effects.on(:cyan), rgb: D.Effects.on(:cyan)}
+  end
+
+  defp pattern_for_quad_press() do
+    Logger.debug("quad press, lights off")
+    %{default: D.Effects.off, rgb: D.Effects.off}
+  end
+
+  defp pattern_for_status() do
+    Logger.debug("status pattern triggered")
+    %{default: D.Effects.on(:blue), rgb: D.Effects.on(:blue)}
+  end
+
+  defp render_patterns(patterns, slot) do
+    D.render(patterns, slot)
+  end
+end

@@ -44,7 +44,11 @@ For just one LED, we can start with a simple Delux child process in our supervis
       ]
 ```
 
-### Setting up the device tree overlay and compiling to device tree blob
+### EASY WAY: Use pre-existing device tree for testing at runtime
+
+
+
+### HARD WAY: Setting up the device tree overlay and compiling to device tree blob
 Nerves Advance Configuration doc https://github.com/nerves-project/nerves/blob/main/docs/Advanced%20Configuration.md#device-tree-overlays
 
 https://www.youtube.com/watch?v=m_NyYEBxfn8

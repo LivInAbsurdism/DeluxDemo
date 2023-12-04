@@ -18,7 +18,7 @@
 
 ### Part 1: Basic Setup and Single RGB LED Control
 
-#### 1.1 Setting Up the Development Environment
+#### Setting Up the Development Environment
 
 - Install Elixir and Nerves.
 
@@ -36,7 +36,7 @@ export MIX_TARGET=rpi0
 mix deps.get
 ```
 
-#### 1.2 Set up Delux and the indicators
+#### Set up Delux and the Indicators
 To start, decide how you'll name your LEDs. I've used a simple naming convention of `rgb-color0` and `rgb-color1`. 
 - Add Delux to `mix.exs`
 - Set LED names as indicators in the Application Supervisor like so and configure the rest of the Application Supervisor. 
@@ -54,7 +54,7 @@ To start, decide how you'll name your LEDs. I've used a simple naming convention
   Supervisor.start_link(children, opts)
 ```
 
-#### 1.2 Building the First RGB LED Circuit
+#### Building the First RGB LED Circuit
 ![Raspberry](./assets/screenshot.png)
 
 
@@ -66,12 +66,12 @@ I've used GPIOs 6, 5, and 27 for red, green, and blue.
 Make note of the GPIOs used for each leg of the RGB. 
 
 
-#### 1.5 Setting the LEDs to GPIO with a pre-existing Device Tree Overlay
+#### Setting the LEDs to GPIO with a pre-existing Device Tree Overlay
 - Load the device tree blob object - `gpio-led.dtbo` to your raspberry pi
   - Can be found within nerves artifacts with `find ~/.nerves/artifacts -name "*gpio-led*"`
   - SCP that to your Nerves device. 
 
-#### 1.6  Interacting with the LED in IEx
+#### Interacting with the LED in IEx
 Set the legs of the LED to your GPIOs using the following cmd. Make sure to label each one accurately as we will be adding more to the circuit. 
   ```
   cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red0 gpio=6")
@@ -118,12 +118,12 @@ Add this LED to the device tree overlay using the pins and new labels (we'll als
 You can control this LED as demonstrated above and can control both like so
 `Delux.render(%{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:magenta)})`
 
-#### 2.2 Introducing a Push-Button
+#### Introducing a Push-Button
 
 Add a push-button to the circuit with a pull-up resistor as shown in the diagram.
 ![Diagram](assets/delux_demo_final_circuit.jpg)
 
-#### 2.3 Setting Up GenServers
+#### Setting Up GenServers
 
 - Explain the role of GenServers in managing state and processes.
 Now, we'll use two GenServers for sending the button presses to the LEDs. 
@@ -232,8 +232,6 @@ end
 ```
 
 ### Part 3: Bringing It All Together
-
-#### 3.1 Full System Integration
 
 Build the firmware again and upload it the device. Set all the GPIOs with the dtoverlay cmd again and start the Delux Process.
 

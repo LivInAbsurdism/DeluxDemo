@@ -18,9 +18,12 @@ defmodule DeluxDemo.Button do
 
   def handle_info({:circuits_gpio, _pin, _timestamp, value}, state) do
     case value do
-      1 -> Process.send_after(self(), :check_press_count, @press_interval)
-            {:noreply, %{state | press_count: state.press_count + 1}}
-      0 -> {:noreply, state}
+      1 ->
+        Process.send_after(self(), :check_press_count, @press_interval)
+        {:noreply, %{state | press_count: state.press_count + 1}}
+
+      0 ->
+        {:noreply, state}
     end
   end
 

@@ -1,4 +1,3 @@
-
 # # config/rpi0.exs
 
 # config :delux_demo,

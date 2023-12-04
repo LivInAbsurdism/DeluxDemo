@@ -26,7 +26,11 @@ defmodule DeluxDemo.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       releases: [{@app, release()}],
-      preferred_cli_target: [run: :host, test: :host]
+      preferred_cli_target: [run: :host, test: :host],
+      dialyzer: [
+        flags: [:missing_return, :extra_return, :unmatched_returns, :error_handling, :underspecs]
+      ],
+      preferred_cli_env: %{docs: :docs}
     ]
   end
 
@@ -71,7 +75,11 @@ defmodule DeluxDemo.MixProject do
       {:nerves_system_osd32mp1, "~> 0.15", runtime: false, targets: :osd32mp1},
       {:nerves_system_x86_64, "~> 1.24", runtime: false, targets: :x86_64},
       {:nerves_system_grisp2, "~> 0.8", runtime: false, targets: :grisp2},
-      {:nerves_system_mangopi_mq_pro, "~> 0.6", runtime: false, targets: :mangopi_mq_pro}
+      {:nerves_system_mangopi_mq_pro, "~> 0.6", runtime: false, targets: :mangopi_mq_pro},
+
+      # Compile-time tools
+      {:ex_doc, "~> 0.22", only: :docs, runtime: false},
+      {:credo, "~> 1.6", only: :dev, runtime: false}
     ]
   end
 

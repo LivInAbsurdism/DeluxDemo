@@ -13,14 +13,25 @@ defmodule DeluxDemo.Blink do
 
   def handle_cast({:button_press_count, count}, state) do
     case count do
-      1 -> render_patterns(pattern_for_single_press(), :user_feedback)
-      2 -> render_patterns(pattern_for_double_press(), :user_feedback)
+      1 ->
+        render_patterns(pattern_for_single_press(), :user_feedback)
+
+      2 ->
+        render_patterns(pattern_for_double_press(), :user_feedback)
+
       3 ->
-        render_patterns(pattern_for_triple_press(), :user_feedback)  # Higher slot
-        render_patterns(pattern_for_status(), :status)  # Lower slot
-      4 -> render_patterns(pattern_for_quad_press(), :user_feedback)
-      _ -> Logger.info("Unhandled press count: #{count}")
+        # Higher slot
+        render_patterns(pattern_for_triple_press(), :user_feedback)
+        # Lower slot
+        render_patterns(pattern_for_status(), :status)
+
+      4 ->
+        render_patterns(pattern_for_quad_press(), :user_feedback)
+
+      _ ->
+        Logger.info("Unhandled press count: #{count}")
     end
+
     {:noreply, state}
   end
 
@@ -36,12 +47,12 @@ defmodule DeluxDemo.Blink do
 
   defp pattern_for_triple_press() do
     Logger.debug("triple press triggered")
-   %{default: D.Effects.on(:yellow), rgb: D.Effects.on(:yellow)}
+    %{default: D.Effects.on(:yellow), rgb: D.Effects.on(:yellow)}
   end
 
   defp pattern_for_quad_press() do
     Logger.debug("quad press, lights off")
-    %{default: D.Effects.off, rgb: D.Effects.off}
+    %{default: D.Effects.off(), rgb: D.Effects.off()}
   end
 
   defp pattern_for_status() do

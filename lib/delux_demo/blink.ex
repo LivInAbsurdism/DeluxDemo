@@ -26,7 +26,7 @@ defmodule DeluxDemo.Blink do
 
   defp pattern_for_single_press() do
     Logger.debug("single press triggered")
-    %{default: D.Effects.on(:red), rgb: D.Effects.on(:green)}
+    %{default: D.Effects.on(:magenta), rgb: D.Effects.on(:magenta)}
   end
 
   defp pattern_for_double_press() do
@@ -36,7 +36,7 @@ defmodule DeluxDemo.Blink do
 
   defp pattern_for_triple_press() do
     Logger.debug("triple press triggered")
-    %{default: D.Effects.on(:cyan), rgb: D.Effects.on(:cyan)}
+   %{default: D.Effects.on(:yellow), rgb: D.Effects.on(:yellow)}
   end
 
   defp pattern_for_quad_press() do
@@ -46,7 +46,7 @@ defmodule DeluxDemo.Blink do
 
   defp pattern_for_status() do
     Logger.debug("status pattern triggered")
-    %{default: D.Effects.on(:blue), rgb: D.Effects.on(:blue)}
+    %{default: D.Effects.on(:blue), rgb: D.Effects.on(:yellow)}
   end
 
   defp render_patterns(patterns, slot) do

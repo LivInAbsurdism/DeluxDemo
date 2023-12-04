@@ -1,120 +1,255 @@
-TODO: edit all of this 
+## Setting Up an RGB Circuit with custom device tree overlay for use with Delux
 
-## Configuring an rpi0 for use with Delux
+### Introduction
+**Goals**
+- Set up a circuit with two RGB LEDs 
+- Add a button 
+- Set the GPIOs to the LEDs
+- Control the LEDs using the button and Delux 
+
+**Required Materials**
+- Raspberry Pi Zero
+- Two RGB LEDs
+- Breadboard
+- Six 220 ohm resistors
+- One 10k ohm resistor
+- One Pushbutton 
+- Jumper cables
+
+### Part 1: Basic Setup and Single RGB LED Control
+
+#### 1.1 Setting Up the Development Environment
+
+- Install Elixir and Nerves.
+
 See nerves docs [here](https://hexdocs.pm/nerves/installation.html).
 See delux docs [here](https://hexdocs.pm/delux/readme.html). 
 
 To begin, create a basic nerves project and install on your `rpi0`.
-`mix nerves.new delux_demo`
-`cd delux_demo`
-`export MIX_TARGET=rpi0`
-`mix deps.get`
+I like to set the MIX_TARGET so I don't need to specify the target for all my cmds. 
 
-
-### Building the circuit
-I started with one LED connected to one of my GPIO pins to keep it simple. We can add more as we work through configuring Delux. 
-TODO: maybe elaborate on this depending on how good you want the tutorial to be
-TODO: Add photo here
-
-### Verifying your circuit works
-- Verify your circuit works by adding Circuits.GPIO as a dependency and turning the circuit on and off (or you can just power it some other way and make sure the LED turns on).
-- To test with Circuits.GPIO, you'll need to build the firmware, burn it to your SD, and boot up your pi
-- SSH in or connect to your `rpi0` and verify that it's working using Circuits.GPIO. 
-
-### Setting up the project, dependencies, and the rpi0
-- Add Delux as a dependency 
-- Add a `config.exs` file for your `rpio`
-
-``` elixir
-config :delux_demo,
-  indicators: %{
-    default: %{led_color: "#{led_name}"}
-  }
+- Create a new Nerves project.
+```
+mix nerves.new delux_demo
+cd delux_demo
+export MIX_TARGET=rpi0 
+mix deps.get
 ```
 
-- Set up the Application Supervisor. 
-For just one LED, we can start with a simple Delux child process in our supervision tree. Set it up, along with your indicators in the start function. 
-``` elixir
+#### 1.2 Set up Delux and the indicators
+To start, decide how you'll name your LEDs. I've used a simple naming convention of `rgb-color0` and `rgb-color1`. 
+- Add Delux to `mix.exs`
+- Set LED names as indicators in the Application Supervisor like so and configure the rest of the Application Supervisor. 
+
+```
  indicators = %{
-      default: %{blue: "gpio-led0"}
+      default: %{green: "rgb-green0", blue: "rgb-blue0", red: "rgb-red0"}
     }
+
     children =
       [
-        {Delux, name: Delux, indicators: indicators}
-      ]
+        {Delux, name: Delux, indicators: indicators} ]
+
+  opts = [strategy: :one_for_one, name: DeluxDemo.Supervisor]
+  Supervisor.start_link(children, opts)
 ```
 
-### EASY WAY: Use pre-existing device tree for testing at runtime
+#### 1.2 Building the First RGB LED Circuit
+![Raspberry](./assets/screenshot.png)
 
 
+Using the pinout diagram, build a circuit for the first RGB LED using the 220 ohm resistors. Make note of each GPIO pin used as they will be referenced later. 
 
-### HARD WAY: Setting up the device tree overlay and compiling to device tree blob
-Nerves Advance Configuration doc https://github.com/nerves-project/nerves/blob/main/docs/Advanced%20Configuration.md#device-tree-overlays
+![Diagram](assets/delux_demo_first_circuit.jpg)
 
-https://www.youtube.com/watch?v=m_NyYEBxfn8
+I've used GPIOs 6, 5, and 27 for red, green, and blue. 
+Make note of the GPIOs used for each leg of the RGB. 
 
-Device Tree for dummies 
-TODO: format these as additional learning resources
 
-In order to set our GPIO pin as an LED, we need to set up a device tree overlay to tell the system how to interact with hardware at a low level. The device tree (put link to device tree docs here) is a data structure that describes the hardware components so that the operating system's kernel can use and manage those components. 
+#### 1.5 Setting the LEDs to GPIO with a pre-existing Device Tree Overlay
+- Load the device tree blob object - `gpio-led.dtbo` to your raspberry pi
+  - Can be found within nerves artifacts with `find ~/.nerves/artifacts -name "*gpio-led*"`
+  - SCP that to your Nerves device. 
 
-The device tree overlay allows us to modify the tree without having to reocmpile it entirely. Here, we use the device tree overlay to ensure that when the system boots up, it knows that the specified GPIO pin should be controlled as an LED. This setup allows higher-level abstractions like Delux to interact with the LED through simple interfaces without handling the underlying hardware complexities. 
+#### 1.6  Interacting with the LED in IEx
+Set the legs of the LED to your GPIOs using the following cmd. Make sure to label each one accurately as we will be adding more to the circuit. 
+  ```
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red0 gpio=6")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green0 gpio=5")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue0 gpio=27")
+  ```
 
-If you are not using an `rpi0`, these instructions are going to be slightly different in regards to setting up your overlay. I found it useful to look at the source code for the Nerves system for the `rpi0` as well as the base device tree source for your specific device (for the rpi0, it is here https://github.com/raspberrypi/linux/blob/rpi-4.19.y/arch/arm/boot/dts/bcm2708-rpi-zero.dts). 
+At this point, you can test the LEDs using our Delux settings in the Application Supervisor but will need to manually start the Application to get it running with the new GPIOs. You can substitute other colors for `:red` to control the colors. See the Delux Documentation for other effects. 
 
-This provides some insight into what the device tree overlay will need to look like and between the source, nerves docs, and the source code for the nerves system, I was able to parse together how to set up my own custom device tree overlay. 
+``` 
+  DeluxDemo.Application.start(:normal, [])
+  Delux.render(%{default: Delux.Effects.on(:red)}) 
+```
 
-1. Set up your .dts file 
-TODO: surely best practice says it should go somewhere that makes sense / isn't /config. Circle back to me. 
-TODO: Also, there may even be a cleaner way to to this overlay. Ask an adultier adult. 
-For the `rpi0`, we can start with something like this (link the .dts file)
-Note, whatever you label the led here is what we will use to reference it in the rest of the Nerves project. 
-You'll want to update the name with the name used here in the `application.ex`
 
-Once that's been set up, we will want to compile it down to a blob. 
-`dtc -@ -I dts -O dtb -o name_of_file.dtbo name_of_file.dts`. 
+### Part 2: Add a Second LED and set the GPIOs
 
-This will create the device tree blob overlay. 
+![Diagram](assets/delux_demo_second_circuit.jpg)
 
-### Adding to the fwup.conf file and setting up config.txt
-Next, we will need to set up a custom `fwup.conf` file and point Nerves to use it. Note, this will overwrite the original `fwup.conf` file so you'll either want to import it into your custom file or copy it in from the Nerves System for your hardware. Add your customizations to this file. 
+Build the circuit for the second LED. 
 
-You'll also want to pull the `config.txt` to add your customizations to it. Along with the pre-existing overlays in the `config.txt`, you can add yours like so `dtoverlay=name_of_overlay`. You'll reference this in the `fwup.conf` so set it up first. 
+Add the next set of indicators to the Application Supervisor
+```
+indicators = %{
+      default: %{green: "rgb-green0", blue: "rgb-blue0", red: "rgb-red0"}
+      rgb: %{green: "rgb-green1", blue: "rgb-blue1", red: "rgb-red1"}
+    }
+```
 
-I added the following to my `fwup.conf`.
+and build the firmware again. 
+`mix firmware`
+`mix build`
+
+Add this LED to the device tree overlay using the pins and new labels (we'll also need to add the other ones back as this does not persist between boots).
 
 ```
-file-resource gpio_led.dtbo {
-    host-path = "${NERVES_APP}/config/gpio_led.dtbo"
-}
-
-file-resource config.txt {
-    host-path = "${NERVES_APP}/config/config.txt"
-}
-
-on-resource gpio_led.dtbo { fat_write(${BOOT_A_PART_OFFSET}, "/overlays/gpio_led.dtbo")}
-on-resource gpio_led.dtbo { fat_write(${BOOT_A_PART_OFFSET}, "/overlays/gpio_led.dtbo")}
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red0 gpio=6")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green0 gpio=5")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue0 gpio=27")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red1 gpio=23")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green1 gpio=24")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue1 gpio=17")
 ```
-These were added to the already existing structure in the file. See (LINK) for exactly where they're located in the file. 
+You can control this LED as demonstrated above and can control both like so
+`Delux.render(%{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:magenta)})`
 
-To use your custom `fwup.conf`, add `fwup_conf: path_to_fwup.conf` to your `config.exs` for the nerves config. 
+#### 2.2 Introducing a Push-Button
 
-TODO: link to your fwup.conf and the original from the nerves system for rpi0 
+Add a push-button to the circuit with a pull-up resistor as shown in the diagram.
+![Diagram](assets/delux_demo_final_circuit.jpg)
 
+#### 2.3 Setting Up GenServers
 
+- Explain the role of GenServers in managing state and processes.
+Now, we'll use two GenServers for sending the button presses to the LEDs. 
 
+Add each GenServer to the child processes in your Application Supervisor. 
+Create each GenServer. I called mined `Blink` and `Button`.
 
-### Configuring with Application Supervisor
-TODO: probably don't need this
-As mentioned earlier, if you haven't already, update your LED name with the name you set in the device tree overlay in your application supervisor. 
+#### Blink GenServer
+The below is a simple GenServer that receives messages from the `Button` GenServer and renders patterns based on how many button presses occur. 
+Feel free to change colors, patterns, or slots - note the default slots have a prioritization order and can be overridden by others. 
 
+```
+defmodule DeluxDemo.Blink do
+  use GenServer
+  require Logger
+  alias Delux, as: D
 
-### Adding additional LEDs to the circuit
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+  end
 
-### Configuring those LEDs
+  def init(_args) do
+    {:ok, %{}}
+  end
 
-### TBD (make some sort of lil program)
+  def handle_cast({:button_press_count, count}, state) do
+    case count do
+      1 -> render_patterns(pattern_for_single_press(), :user_feedback)
+      2 -> render_patterns(pattern_for_double_press(), :user_feedback)
+      3 ->
+        render_patterns(pattern_for_triple_press(), :user_feedback)  # Higher slot
+        render_patterns(pattern_for_status(), :status)  # Lower slot
+      4 -> render_patterns(pattern_for_quad_press(), :user_feedback)
+      _ -> Logger.info("Unhandled press count: #{count}")
+    end
+    {:noreply, state}
+  end
 
-### End Goal 
-- 3 groups of LEDs that blink in sequence (blue, red, yellow, etc)
-- thorough explanation of editing the device tree since there are very few online rn
+  defp pattern_for_single_press() do
+    Logger.debug("single press triggered")
+    %{default: D.Effects.on(:magenta), rgb: D.Effects.on(:magenta)}
+  end
+
+  defp pattern_for_double_press() do
+    Logger.debug("double press triggered")
+    %{default: D.Effects.on(:magenta), rgb: D.Effects.on(:cyan)}
+  end
+
+  defp pattern_for_triple_press() do
+    Logger.debug("triple press triggered")
+   %{default: D.Effects.on(:yellow), rgb: D.Effects.on(:yellow)}
+  end
+
+  defp pattern_for_quad_press() do
+    Logger.debug("quad press, lights off")
+    %{default: D.Effects.off, rgb: D.Effects.off}
+  end
+
+  defp pattern_for_status() do
+    Logger.debug("status pattern triggered")
+    %{default: D.Effects.on(:blue), rgb: D.Effects.on(:yellow)}
+  end
+
+  defp render_patterns(patterns, slot) do
+    D.render(patterns, slot)
+  end
+end
+```
+
+##### Button GenServer
+The `Button` GenServer is even simpler. We set up our input pin and monitor it with `Circuits.GPIO` and send the button presses to the `Blink` GenServer. 
+
+```
+defmodule DeluxDemo.Button do
+  use GenServer
+  require Logger
+  alias Circuits.GPIO
+
+  @input_pin 16
+  @press_interval 900
+
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+  end
+
+  def init(_args) do
+    {:ok, input_gpio} = GPIO.open(@input_pin, :input)
+    GPIO.set_interrupts(input_gpio, :both)
+    {:ok, %{input_gpio: input_gpio, press_count: 0}}
+  end
+
+  def handle_info({:circuits_gpio, _pin, _timestamp, value}, state) do
+    case value do
+      1 -> Process.send_after(self(), :check_press_count, @press_interval)
+            {:noreply, %{state | press_count: state.press_count + 1}}
+      0 -> {:noreply, state}
+    end
+  end
+
+  def handle_info(:check_press_count, %{press_count: count} = state) do
+    GenServer.cast(DeluxDemo.Blink, {:button_press_count, count})
+    {:noreply, %{state | press_count: 0}}
+  end
+end
+
+```
+
+### Part 3: Bringing It All Together
+
+#### 3.1 Full System Integration
+
+Build the firmware again and upload it the device. Set all the GPIOs with the dtoverlay cmd again and start the Delux Process.
+
+```
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red0 gpio=6")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green0 gpio=5")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue0 gpio=27")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red1 gpio=23")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green1 gpio=24")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue1 gpio=17")
+
+    DeluxDemo.Application.start(:normal, [])
+```
+
+and voila! You are now controlling LEDs using Delux and your input button. 
+
+### Conclusion
+
+Feel free to play with slots in the `Blink` GenServer code to see how they override each other or play with additional `Delux.Effects` in the GenServer. There are many combinations. You can also add additional LEDs to indicators or set up custom slots. 

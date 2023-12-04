@@ -4,7 +4,7 @@ defmodule DeluxDemo.Button do
   alias Circuits.GPIO
 
   @input_pin 16
-  @press_interval 800  # Time window for button press counting in milliseconds
+  @press_interval 900
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)

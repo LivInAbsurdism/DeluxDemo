@@ -41,8 +41,6 @@ mix deps.get
 
 #### Set up Delux and the Indicators
 
-TODO: come back and add Delux Helper here
-
 To start, decide how you'll name your LEDs. I've used a simple naming convention of `rgb-color0` and `rgb-color1`.
 
 - Add Delux to `mix.exs`
@@ -67,10 +65,12 @@ To start, decide how you'll name your LEDs. I've used a simple naming convention
 
 Using the pinout diagram, build a circuit for the first RGB LED using the 220 ohm resistors. Make note of each GPIO pin used as they will be referenced later.
 
-![Diagram](assets/delux_demo_first_circuit.jpg)
+TODO: add circuit image here
 
 I've used GPIOs 16, 20, and 21 for red, green, and blue.
 Make note of the GPIOs used for each leg of the RGB.
+
+TODO: come back and add Delux Helper here
 
 #### Setting the LEDs to GPIO with a pre-existing Device Tree Overlay
 
@@ -97,7 +97,7 @@ At this point, you can test the LEDs using our Delux settings in the Application
 
 ### Part 2: Add a Second LED and set the GPIOs
 
-![Diagram](assets/delux_demo_second_circuit.jpg)
+TODO: add circuit image here
 
 Build the circuit for the second LED.
 
@@ -132,16 +132,17 @@ You can control this LED as demonstrated above and can control both like so
 
 #### Introducing a Push-Button
 
-Add a push-button to the circuit with a pull-up resistor as shown in the diagram.
-![Diagram](assets/delux_demo_final_circuit.jpg)
+Add a push-button to the circuit with a pull-up resistor as shown in the diagram and schematic below.
+![Diagram](assets/delux_demo_image.jpg)
+![Schematic](assets/delux_demo_second_circuit_schematic_schem.jpg)
 
 #### Setting Up GenServers
 
-- Explain the role of GenServers in managing state and processes.
 Now, we'll use two GenServers for sending the button presses to the LEDs.
 
 Add each GenServer to the child processes in your Application Supervisor.
-Create each GenServer. I called mined `Blink` and `Button`.
+
+Create each GenServer. I called mine `Blink` and `Button`.
 
 #### Blink GenServer
 

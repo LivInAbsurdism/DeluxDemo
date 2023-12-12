@@ -28,34 +28,20 @@ defmodule DeluxDemo.Blink do
     {:reply, :ok, state}
   end
 
-  defp pattern_for_mode(1) do
-    Logger.debug("single press triggered")
+  defp pattern_for_mode(1), do:
     %{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:magenta)}
-  end
 
-  defp pattern_for_mode(2) do
-    Logger.debug("double press triggered")
+  defp pattern_for_mode(2), do:
     %{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:cyan)}
-  end
 
-  defp pattern_for_mode(3) do
-    Logger.debug("triple press triggered")
+  defp pattern_for_mode(3), do:
     %{default: Delux.Effects.on(:yellow), rgb: Delux.Effects.on(:yellow)}
-  end
 
-  defp pattern_for_mode(4) do
-    Logger.debug("quad press, lights off")
+  defp pattern_for_mode(4), do:
     %{default: Delux.Effects.off(), rgb: Delux.Effects.off()}
-  end
 
   defp pattern_for_mode(_mode), do: %{default: Delux.Effects.off(), rgb: Delux.Effects.off()}
 
-  defp pattern_for_status() do
-    Logger.debug("status pattern triggered")
-    %{default: Delux.Effects.on(:blue), rgb: Delux.Effects.on(:yellow)}
-  end
+  defp render_patterns(patterns, slot), do: Delux.render(patterns, slot)
 
-  defp render_patterns(patterns, slot) do
-    Delux.render(patterns, slot)
-  end
 end

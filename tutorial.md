@@ -41,6 +41,8 @@ mix deps.get
 
 #### Set up Delux and the Indicators
 
+TODO: come back and add Delux Helper here
+
 To start, decide how you'll name your LEDs. I've used a simple naming convention of `rgb-color0` and `rgb-color1`.
 
 - Add Delux to `mix.exs`
@@ -67,7 +69,7 @@ Using the pinout diagram, build a circuit for the first RGB LED using the 220 oh
 
 ![Diagram](assets/delux_demo_first_circuit.jpg)
 
-I've used GPIOs 6, 5, and 27 for red, green, and blue.
+I've used GPIOs 16, 20, and 21 for red, green, and blue.
 Make note of the GPIOs used for each leg of the RGB.
 
 #### Setting the LEDs to GPIO with a pre-existing Device Tree Overlay
@@ -81,9 +83,9 @@ Make note of the GPIOs used for each leg of the RGB.
 Set the legs of the LED to your GPIOs using the following cmd. Make sure to label each one accurately as we will be adding more to the circuit.
 
   ``` elixir
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red0 gpio=6")
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green0 gpio=5")
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue0 gpio=26")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red0 gpio=16")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green0 gpio=20")
+  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue0 gpio=21")
   ```
 
 At this point, you can test the LEDs using our Delux settings in the Application Supervisor but will need to manually start the Application to get it running with the new GPIOs. You can substitute other colors for `:red` to control the colors. See the Delux Documentation for other effects.
@@ -122,8 +124,6 @@ Add this LED to the device tree overlay using the pins and new labels (we'll als
   cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red1 gpio=23")
   cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green1 gpio=24")
   cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue1 gpio=25")
-
-  change button to GPIO 16 to
 ```
 
 You can control this LED as demonstrated above and can control both like so
@@ -145,105 +145,12 @@ Create each GenServer. I called mined `Blink` and `Button`.
 
 #### Blink GenServer
 
-The below is a simple GenServer that receives messages from the `Button` GenServer and renders patterns based on how many button presses occur.
+See `blink.ex` for a simple GenServer that receives messages from the `Button` GenServer and renders patterns based on how many button presses occur.
 Feel free to change colors, patterns, or slots - note the default slots have a prioritization order and can be overridden by others.
-
-``` elixir
-defmodule DeluxDemo.Blink do
-  use GenServer
-  require Logger
-  alias Delux, as: D
-
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
-  end
-
-  def init(_args) do
-    {:ok, %{}}
-  end
-
-  def handle_cast({:button_press_count, count}, state) do
-    case count do
-      1 -> render_patterns(pattern_for_single_press(), :user_feedback)
-      2 -> render_patterns(pattern_for_double_press(), :user_feedback)
-      3 ->
-        render_patterns(pattern_for_triple_press(), :user_feedback)  # Higher slot
-        render_patterns(pattern_for_status(), :status)  # Lower slot
-      4 -> render_patterns(pattern_for_quad_press(), :user_feedback)
-      _ -> Logger.info("Unhandled press count: #{count}")
-    end
-    {:noreply, state}
-  end
-
-  defp pattern_for_single_press() do
-    Logger.debug("single press triggered")
-    %{default: D.Effects.on(:magenta), rgb: D.Effects.on(:magenta)}
-  end
-
-  defp pattern_for_double_press() do
-    Logger.debug("double press triggered")
-    %{default: D.Effects.on(:magenta), rgb: D.Effects.on(:cyan)}
-  end
-
-  defp pattern_for_triple_press() do
-    Logger.debug("triple press triggered")
-   %{default: D.Effects.on(:yellow), rgb: D.Effects.on(:yellow)}
-  end
-
-  defp pattern_for_quad_press() do
-    Logger.debug("quad press, lights off")
-    %{default: D.Effects.off, rgb: D.Effects.off}
-  end
-
-  defp pattern_for_status() do
-    Logger.debug("status pattern triggered")
-    %{default: D.Effects.on(:blue), rgb: D.Effects.on(:yellow)}
-  end
-
-  defp render_patterns(patterns, slot) do
-    D.render(patterns, slot)
-  end
-end
-```
 
 ##### Button GenServer
 
-The `Button` GenServer is even simpler. We set up our input pin and monitor it with `Circuits.GPIO` and send the button presses to the `Blink` GenServer.
-
-``` elixir
-defmodule DeluxDemo.Button do
-  use GenServer
-  require Logger
-  alias Circuits.GPIO
-
-  @input_pin 16
-  @press_interval 900
-
-  def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
-  end
-
-  def init(_args) do
-    {:ok, input_gpio} = GPIO.open(@input_pin, :input)
-    GPIO.set_interrupts(input_gpio, :both)
-    {:ok, %{input_gpio: input_gpio, press_count: 0}}
-  end
-
-  def handle_info({:circuits_gpio, _pin, _timestamp, value}, state) do
-    case value do
-      1 -> Process.send_after(self(), :check_press_count, @press_interval)
-            {:noreply, %{state | press_count: state.press_count + 1}}
-      0 -> {:noreply, state}
-    end
-  end
-
-  def handle_info(:check_press_count, %{press_count: count} = state) do
-    GenServer.cast(DeluxDemo.Blink, {:button_press_count, count})
-    {:noreply, %{state | press_count: 0}}
-  end
-end
-
-```
+See `button.ex` for the other GenServer. We set up our input pin and monitor it with `Circuits.GPIO` and send the button presses to the `Blink` GenServer.
 
 ### Part 3: Bringing It All Together
 
@@ -257,11 +164,10 @@ Build the firmware again and upload it the device. Set all the GPIOs with the dt
   cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red1 gpio=23")
   cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green1 gpio=24")
   cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue1 gpio=27")
-
-    DeluxDemo.Application.start(:normal, [])
 ```
 
 and voila! You are now controlling LEDs using Delux and your input button.
+TODO: add Delux helper and info about starting button and blink from Application Supervisor and applying dtoverlays there too.
 
 ### Conclusion
 

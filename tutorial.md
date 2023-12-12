@@ -1,4 +1,4 @@
-# Setting Up an RGB Circuit with custom device tree overlay for use with Delux
+# Setting Up an RGB Circuit with Device Tree Overlay for use with Delux
 
 ## Introduction
 

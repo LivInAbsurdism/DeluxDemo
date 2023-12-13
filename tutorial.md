@@ -145,6 +145,8 @@ Now, we'll use two GenServers for sending the button presses to the LEDs. We wil
 Add each GenServer to the child processes in your Application Supervisor.
 
 ``` elixir
+setup_device_tree_overlays()
+
  indicators = %{
       default: %{green: "rgb-green0", blue: "rgb-blue0", red: "rgb-red0"},
       rgb: %{green: "rgb-green1", blue: "rgb-blue1", red: "rgb-red1"}

@@ -41,23 +41,23 @@ mix deps.get
 
 #### Set up Delux
 
-<!-- To start, decide how you'll name your LEDs. I've used a simple naming convention of `rgb-color0` and `rgb-color1`. -->
-
 - Add Delux to `mix.exs` and install dependencies.
-<!-- - Set LED names as indicators in the Application Supervisor like so and configure the rest of the Application Supervisor.
+- Set LED names in your `config.exs` and the dt_overlays path as shown below
 
 ``` elixir
- indicators = %{
-      default: %{green: "rgb-green0", blue: "rgb-blue0", red: "rgb-red0"}
-    }
+ config :delux,
+  indicators: %{
+    default: %{green: "rgb-green0", blue: "rgb-blue0", red: "rgb-red0"}
+  }
 
-    children =
-      [
-        {Delux, name: Delux, indicators: indicators} ]
-
-  opts = [strategy: :one_for_one, name: DeluxDemo.Supervisor]
-  Supervisor.start_link(children, opts)
-``` -->
+config :delux, :dt_overlays,
+  overlays_path: "/data/gpio-led.dtbo",
+  pins: [
+    {"rgb-red0", 12},
+    {"rgb-green0", 16},
+    {"rgb-blue0", 21},
+  ]
+```
 
 ### Building the First RGB LED Circuit
 
@@ -77,22 +77,11 @@ I've used GPIOs 12, 16, and 21 for red, green, and blue.
 
 #### Interacting with the LED in IEx
 
-Set the legs of the LED to your GPIOs using the following cmd in an iEX session on your nerves device. Make sure to label each one accurately as we will be adding more to the circuit.
+Now when your Nerves application starts up, your GPIO pins should be named and ready to use with Delux.
 
-  ``` elixir
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red0 gpio=12")
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green0 gpio=16")
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue0 gpio=21")
-  ```
-
-At this point, you can test the LEDs by setting the above labels as indicators in Delux. You can substitute other colors for `:red` to control the colors. See the Delux Documentation for other effects.
+At this point, you can test the LEDs with various Delux cmds.
 
 ``` elixir
- indicators = %{
-      default: %{green: "rgb-green0", blue: "rgb-blue0", red: "rgb-red0"}
-    }
-
-  DeluxDemo.Application.start(:normal, indicators: indicators)
   Delux.render(%{default: Delux.Effects.on(:red)})
 ```
 
@@ -103,33 +92,12 @@ At this point, you can test the LEDs by setting the above labels as indicators i
 
 Build the circuit for the second LED.
 
-<!-- Add the next set of indicators to the Application Supervisor -->
-
+Add the new set of indicators to your `config.exs` as indicators and pins.
 You can now control both sets of indicators in your iEX shell on your device.
 
 ``` elixir
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red0 gpio=12")
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green0 gpio=16")
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue0 gpio=21")
-
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-red1 gpio=24")
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-green1 gpio=25")
-  cmd("dtoverlay /data/gpio-led.dtbo label=rgb-blue1 gpio=1")
-
-indicators = %{
-      default: %{green: "rgb-green0", blue: "rgb-blue0", red: "rgb-red0"}
-      rgb: %{green: "rgb-green1", blue: "rgb-blue1", red: "rgb-red1"}
-    }
-
-DeluxDemo.Application.start(:normal, indicators: indicators)
 Delux.render(%{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:magenta)})
 ```
-
-<!-- and build the firmware again.
-`mix firmware`
-`mix build` -->
-
-<!-- Add this LED to the device tree overlay using the pins and new labels (we'll also need to add the other ones back as this does not persist between boots). -->
 
 ### Introducing a Push-Button
 
@@ -145,16 +113,8 @@ Now, we'll use two GenServers for sending the button presses to the LEDs. We wil
 Add each GenServer to the child processes in your Application Supervisor.
 
 ``` elixir
-setup_device_tree_overlays()
-
- indicators = %{
-      default: %{green: "rgb-green0", blue: "rgb-blue0", red: "rgb-red0"},
-      rgb: %{green: "rgb-green1", blue: "rgb-blue1", red: "rgb-red1"}
-    }
-
     children =
       [
-        {Delux, name: Delux, indicators: indicators},
         {DeluxDemo.Blink, []},
         {DeluxDemo.Button, []}
       ]
@@ -164,32 +124,6 @@ setup_device_tree_overlays()
 ```
 
 Create each GenServer. I called mine `Blink` and `Button`.
-
-To avoid having to add my LEDs each time, I've also added a function to my Application Supervisor that sets them up for me on start.
-
-``` elixir
-  defp setup_device_tree_overlays do
-    overlays = [
-      ["/data/gpio-led.dtbo", "label=rgb-red0", "gpio=12"],
-      ["/data/gpio-led.dtbo", "label=rgb-green0", "gpio=16"],
-      ["/data/gpio-led.dtbo", "label=rgb-blue0", "gpio=21"],
-      ["/data/gpio-led.dtbo", "label=rgb-red1", "gpio=24"],
-      ["/data/gpio-led.dtbo", "label=rgb-green1", "gpio=25"],
-      ["/data/gpio-led.dtbo", "label=rgb-blue1", "gpio=1"]
-    ]
-
-    Enum.each(overlays, fn args ->
-      {output, exit_code} = System.cmd("dtoverlay", args)
-
-      if exit_code != 0 do
-        Logger.error("Failed to execute: #{Enum.join(args, " ")}")
-        Logger.error("Output: #{output}")
-      end
-    end)
-  end
-```
-
-The Delux process will crash if it has set indicators that cannot be found under `/sys/class/leds`. Setting these up before the process starts prevents the crash and saves us some extra work.
 
 #### Blink GenServer
 

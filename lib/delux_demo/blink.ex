@@ -7,21 +7,16 @@ defmodule DeluxDemo.Blink do
 
   @spec start_link(keyword()) :: GenServer.on_start()
   def start_link(args) do
-    Logger.debug("START LINK BLINK")
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   @spec set_mode(non_neg_integer()) :: :ok
   def set_mode(count) do
-    IO.puts("COUNT IS #{count}")
     GenServer.call(DeluxDemo.Blink, {:button_press_count, count}, 10000)
   end
 
   @impl GenServer
-  def init(_args) do
-    Logger.debug("IN INIT FOR BLINK")
-    {:ok, %{}}
-  end
+  def init(_args), do: {:ok, %{}}
 
   @impl GenServer
   def handle_call({:button_press_count, count}, _from, state) do

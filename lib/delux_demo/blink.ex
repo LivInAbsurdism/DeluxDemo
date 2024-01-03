@@ -1,12 +1,13 @@
 defmodule DeluxDemo.Blink do
-    @moduledoc """
-      Module for controlling the pattern of the LEDs.
-    """
-    use GenServer
-    require Logger
+  @moduledoc """
+    Module for controlling the pattern of the LEDs.
+  """
+  use GenServer
+  require Logger
 
   @spec start_link(keyword()) :: GenServer.on_start()
   def start_link(args) do
+    Logger.debug("START LINK BLINK")
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
@@ -18,6 +19,7 @@ defmodule DeluxDemo.Blink do
 
   @impl GenServer
   def init(_args) do
+    Logger.debug("IN INIT FOR BLINK")
     {:ok, %{}}
   end
 
@@ -28,20 +30,18 @@ defmodule DeluxDemo.Blink do
     {:reply, :ok, state}
   end
 
-  defp pattern_for_mode(1), do:
-    %{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:magenta)}
+  defp pattern_for_mode(1),
+    do: %{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:magenta)}
 
-  defp pattern_for_mode(2), do:
-    %{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:cyan)}
+  defp pattern_for_mode(2),
+    do: %{default: Delux.Effects.on(:magenta), rgb: Delux.Effects.on(:cyan)}
 
-  defp pattern_for_mode(3), do:
-    %{default: Delux.Effects.on(:yellow), rgb: Delux.Effects.on(:yellow)}
+  defp pattern_for_mode(3),
+    do: %{default: Delux.Effects.on(:yellow), rgb: Delux.Effects.on(:yellow)}
 
-  defp pattern_for_mode(4), do:
-    %{default: Delux.Effects.off(), rgb: Delux.Effects.off()}
+  defp pattern_for_mode(4), do: %{default: Delux.Effects.off(), rgb: Delux.Effects.off()}
 
   defp pattern_for_mode(_mode), do: %{default: Delux.Effects.off(), rgb: Delux.Effects.off()}
 
   defp render_patterns(patterns, slot), do: Delux.render(patterns, slot)
-
 end

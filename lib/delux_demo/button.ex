@@ -3,19 +3,21 @@ defmodule DeluxDemo.Button do
     Module for ingesting button presses and sending them to DeluxDemo.Blink
   """
   use GenServer
-  require Logger
   alias Circuits.GPIO
+  require Logger
 
   @input_pin 22
   @press_interval 900
 
   @spec start_link(keyword()) :: GenServer.on_start()
   def start_link(args) do
+    Logger.debug("START LINK BUTTON")
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   @impl GenServer
   def init(_args) do
+    Logger.debug("IN INIT FOR BUTTON")
     {:ok, input_gpio} = GPIO.open(@input_pin, :input)
     GPIO.set_interrupts(input_gpio, :both)
     {:ok, %{input_gpio: input_gpio, press_count: 0}}

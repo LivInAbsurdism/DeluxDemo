@@ -47,7 +47,7 @@ defmodule DeluxDemo.MixProject do
     [
       # Dependencies for all targets
       {:circuits_gpio, "~> 0.4"},
-      {:delux, "~> 0.4.1"},
+      {:delux, path: "/Users/olivia.cella/code/oss/delux", override: true},
       {:nerves, "~> 1.10", runtime: false},
       {:shoehorn, "~> 0.9.1"},
       {:ring_logger, "~> 0.10.0"},
